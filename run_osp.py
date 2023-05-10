@@ -1,15 +1,14 @@
 import json
-import numpy as np
 import pandas as pd
 
-from pymoo.algorithms.moo.moead import MOEAD
-from pymoo.operators.mutation.bitflip import BitflipMutation
 from pymoo.operators.sampling.rnd import IntegerRandomSampling
 from pymoo.optimize import minimize
 from pymoo.util.ref_dirs import get_reference_directions
 
 from tqdm import tqdm
 
+from algo.bitflip_mutation import BitflipMutation
+from algo.moead import MOEAD
 from algo.moeadw import MOEADW
 from algo.res_callback import ResCallback
 from algo.sensor_crossover import SensorCrossover
@@ -37,24 +36,26 @@ def get_algorithm(algorithm_name, m, seed):
 # Problem configuration
 network = "Neptun"
 budget = 10
-nobj = 4
+nobj = 2
 
 # Experiment configuration
-ntrial = 2
-ngen = 200
+ntrial = 10
+ngen = 400
 
-trace_matrix = pd.read_csv(f"data/osp/{network}_trace.csv", header=0, sep=",")
-impact_matrix1 = np.load(file=f"data/osp/{network}_det_times.npy")
-impact_matrix2 = np.load(file=f"data/osp/{network}_vol_contam.npy")
+# Impact matrices for detection time and volume of contaminated water
+impact_matrix1 = pd.read_csv(f"data/{network}_det_times.csv",
+                             dtype={'sensor': 'str', 'scenario': 'str', 'time': 'float'})
+impact_matrix2 = pd.read_csv(f"data/{network}_vol_contam.csv",
+                             dtype={'sensor': 'str', 'scenario': 'str', 'volume': 'float'})
 
 # Loop over different algorithms
 for algo_name in ["moead", "moeadw"]:
     if nobj == 2:
-        prob = OSP2(trace_matrix, impact_matrix1, budget)
+        prob = OSP2(impact_matrix1, budget)
     elif nobj == 4:
-        prob = OSP4(trace_matrix, impact_matrix1, impact_matrix2, budget)
+        prob = OSP4(impact_matrix1, impact_matrix2, budget)
     else:
-        raise "Only 2 or 4 objectives supported!"
+        raise "Not implemented yet! Only 2 and 4 objectives are supported!"
 
     termination = ('n_gen', ngen)
     res = {}
@@ -62,7 +63,7 @@ for algo_name in ["moead", "moeadw"]:
     # Loop over different trial
     for trial in tqdm(range(ntrial), desc=algo_name, position=0):
         algo = get_algorithm(algo_name, m=prob.n_obj, seed=trial)
-        pymoo_res = minimize(prob, algo, termination, seed=trial, callback=ResCallback(), verbose=True)
+        pymoo_res = minimize(prob, algo, termination, seed=trial, callback=ResCallback(), verbose=False)
         res[trial] = pymoo_res.algorithm.callback.data
 
     # Add configuration to the results

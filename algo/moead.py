@@ -1,27 +1,18 @@
 import numpy as np
 
-from scipy.stats import wasserstein_distance
+from scipy.spatial.distance import cdist
 
 from pymoo.algorithms.base.genetic import GeneticAlgorithm
 from pymoo.core.algorithm import LoopwiseAlgorithm
 from pymoo.core.duplicate import NoDuplicateElimination
 from pymoo.core.selection import Selection
 from pymoo.core.variable import Real, get
-from pymoo.docs import parse_doc_string
 from pymoo.operators.crossover.sbx import SBX
 from pymoo.operators.mutation.pm import PM
 from pymoo.operators.sampling.rnd import FloatRandomSampling
 from pymoo.util.display.multi import MultiObjectiveOutput
 from pymoo.util.misc import parameter_less
 from pymoo.util.reference_direction import default_ref_dirs
-
-
-def cwdist(P, Q):
-    mat = np.zeros((P.shape[0], Q.shape[0]))
-    for i, r1 in enumerate(P):
-        for j, r2 in enumerate(Q):
-            mat[i, j] = wasserstein_distance(range(len(r1)), range(len(r2)), r1, r2)
-    return mat
 
 
 class NeighborhoodSelection(Selection):
@@ -49,7 +40,7 @@ class NeighborhoodSelection(Selection):
 # Implementation
 # =========================================================================================================
 
-class MOEADW(LoopwiseAlgorithm, GeneticAlgorithm):
+class MOEAD(LoopwiseAlgorithm, GeneticAlgorithm):
 
     def __init__(self,
                  ref_dirs=None,
@@ -92,8 +83,7 @@ class MOEADW(LoopwiseAlgorithm, GeneticAlgorithm):
         self.pop_size = len(self.ref_dirs)
 
         # neighbours includes the entry by itself intentionally for the survival method
-        self.neighbors = np.argsort(cwdist(self.ref_dirs, self.ref_dirs),
-                                    axis=1, kind='quicksort')[:, -self.n_neighbors:]
+        self.neighbors = np.argsort(cdist(self.ref_dirs, self.ref_dirs), axis=1, kind='quicksort')[:, :self.n_neighbors]
 
         # if the decomposition is not set yet, set the default
         if self.decomposition is None:
@@ -149,6 +139,3 @@ def default_decomp(problem):
     else:
         from pymoo.decomposition.pbi import PBI
         return PBI()
-
-
-parse_doc_string(MOEADW.__init__)
