@@ -20,7 +20,6 @@ If you use this repository, please cite the following paper:
 > [Ponti A, Candelieri A, Giordani I, Archetti F. Intrusion Detection in Networks by Wasserstein Enabled Many-Objective Evolutionary Algorithms. Mathematics. 2023; 11(10):2342. https://doi.org/10.3390/math11102342](https://www.mdpi.com/2227-7390/11/10/2342)
 
 ```
-
 @Article{math11102342,
   AUTHOR = {Ponti, Andrea and Candelieri, Antonio and Giordani, Ilaria and Archetti, Francesco},
   TITLE = {Intrusion Detection in Networks by Wasserstein Enabled Many-Objective Evolutionary Algorithms},
